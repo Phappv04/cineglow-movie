@@ -100,13 +100,56 @@ const AuthModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    setSubmitting(true);
 
     if (!email || !password || (mode === 'register' && !fullName)) {
       setError('Vui lòng điền đầy đủ các thông tin cần thiết.');
-      setSubmitting(false);
       return;
     }
+
+    // Email validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      setError('Địa chỉ email không đúng định dạng (ví dụ: name@domain.com).');
+      return;
+    }
+
+    if (mode === 'register') {
+      // Name validation: Vietnamese/English letters and spaces, min 2 chars
+      const nameClean = fullName.trim();
+      const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/;
+      if (!nameRegex.test(nameClean)) {
+        setError('Họ và tên chỉ được chứa chữ cái và khoảng trắng.');
+        return;
+      }
+      if (nameClean.length < 2) {
+        setError('Họ và tên phải có ít nhất 2 ký tự.');
+        return;
+      }
+
+      // Password validation
+      if (password.length < 8) {
+        setError('Mật khẩu phải có ít nhất 8 ký tự.');
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setError('Mật khẩu phải chứa ít nhất 1 chữ cái thường (a-z).');
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        setError('Mật khẩu phải chứa ít nhất 1 chữ cái in hoa (A-Z).');
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        setError('Mật khẩu phải chứa ít nhất 1 chữ số (0-9).');
+        return;
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        setError('Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt (ví dụ: @, #, $, !, %, ...).');
+        return;
+      }
+    }
+
+    setSubmitting(true);
 
     if (mode === 'login') {
       const result = await login(email, password);
