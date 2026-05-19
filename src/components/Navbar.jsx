@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Film, Heart, Sparkles } from 'lucide-react';
+import { Search, Film, Heart } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import AuthModal from './AuthModal';
 
 const Navbar = ({ currentRoute }) => {
+  const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   // Handle scroll class toggle
   useEffect(() => {
@@ -118,6 +122,31 @@ const Navbar = ({ currentRoute }) => {
         >
           <Heart size={18} fill={isLinkActive('watchlist') ? 'white' : 'none'} color={isLinkActive('watchlist') ? 'white' : 'var(--text-secondary)'} />
         </button>
+
+        {user ? (
+          <div className="user-profile-menu" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '8px' }}>
+            <span className="user-name-display" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+              {user.fullName}
+            </span>
+            <button 
+              className="btn btn-secondary" 
+              onClick={logout} 
+              style={{ padding: '6px 12px', fontSize: '0.75rem', borderRadius: '20px' }}
+            >
+              Đăng xuất
+            </button>
+          </div>
+        ) : (
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setIsAuthOpen(true)}
+            style={{ padding: '6px 16px', fontSize: '0.8rem', borderRadius: '20px', marginLeft: '8px' }}
+          >
+            Đăng Nhập
+          </button>
+        )}
+
+        <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       </div>
     </nav>
   );

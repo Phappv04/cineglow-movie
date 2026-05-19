@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Play, Tv, ArrowLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import { fetchMovieDetails } from '../utils/api';
 import HlsPlayer from '../components/HlsPlayer';
+import { useAuth } from '../context/AuthContext';
 
 const Player = ({ slug, episodeSlug }) => {
+  const { user, fetchWithAuth } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [serverIndex, setServerIndex] = useState(0);
@@ -62,42 +64,61 @@ const Player = ({ slug, episodeSlug }) => {
 
     setActiveEpisode(targetEp);
 
-    // Save to Watch History in LocalStorage
+    // Save to Watch History
     saveToHistory(data.movie, targetEp, serverIndex);
-  }, [data, serverIndex, episodeSlug]);
+  }, [data, serverIndex, episodeSlug, user]); // Reload when user log in state changes
 
-  const saveToHistory = (movie, episode, sIndex) => {
+  const saveToHistory = async (movie, episode, sIndex) => {
     if (!movie || !episode) return;
-    try {
-      let history = JSON.parse(localStorage.getItem('watch_history') || '[]');
-      
-      // Remove existing item to put the new one at the top
-      history = history.filter(item => item._id !== movie._id);
-
-      history.unshift({
-        _id: movie._id,
-        name: movie.name,
-        slug: movie.slug,
-        origin_name: movie.origin_name,
-        poster_url: movie.poster_url,
-        thumb_url: movie.thumb_url,
-        year: movie.year,
-        lastEpisode: {
-          name: episode.name,
-          slug: episode.slug,
-          serverIndex: sIndex
-        },
-        watchedAt: new Date().getTime()
-      });
-
-      // Limit history to 20 items
-      if (history.length > 20) {
-        history = history.slice(0, 20);
+    
+    if (user) {
+      try {
+        await fetchWithAuth('http://localhost:8080/api/watch/history', {
+          method: 'POST',
+          body: JSON.stringify({
+            movieSlug: movie.slug,
+            movieName: movie.name,
+            posterPath: movie.poster_url || movie.thumb_url,
+            lastEpisodeName: episode.name,
+            lastEpisodeSlug: episode.slug,
+            progressSeconds: 0.0
+          })
+        });
+      } catch (e) {
+        console.error('Error saving history to server:', e);
       }
+    } else {
+      try {
+        let history = JSON.parse(localStorage.getItem('watch_history') || '[]');
+        
+        // Remove existing item to put the new one at the top
+        history = history.filter(item => item._id !== movie._id);
 
-      localStorage.setItem('watch_history', JSON.stringify(history));
-    } catch (e) {
-      console.error('Error saving history:', e);
+        history.unshift({
+          _id: movie._id,
+          name: movie.name,
+          slug: movie.slug,
+          origin_name: movie.origin_name,
+          poster_url: movie.poster_url,
+          thumb_url: movie.thumb_url,
+          year: movie.year,
+          lastEpisode: {
+            name: episode.name,
+            slug: episode.slug,
+            serverIndex: sIndex
+          },
+          watchedAt: new Date().getTime()
+        });
+
+        // Limit history to 20 items
+        if (history.length > 20) {
+          history = history.slice(0, 20);
+        }
+
+        localStorage.setItem('watch_history', JSON.stringify(history));
+      } catch (e) {
+        console.error('Error saving history locally:', e);
+      }
     }
   };
 

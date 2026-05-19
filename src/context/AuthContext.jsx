@@ -1,0 +1,131 @@
+import React, { createContext, useState, useEffect, useContext } from 'react';
+
+const AuthContext = createContext(null);
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Load stored token and user profile on startup
+    const storedToken = localStorage.getItem('cineglow_token');
+    const storedUser = localStorage.getItem('cineglow_user');
+    
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Đăng nhập thất bại');
+      }
+
+      // Save token and parse a basic profile from email
+      const userProfile = { email, fullName: email.split('@')[0] }; // Basic fallback name
+      
+      localStorage.setItem('cineglow_token', data.token);
+      localStorage.setItem('cineglow_user', JSON.stringify(userProfile));
+      
+      setToken(data.token);
+      setUser(userProfile);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const register = async (email, password, fullName) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, fullName })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Đăng ký thất bại');
+      }
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const loginWithGoogle = async (email, fullName, googleId) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, fullName, googleId })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Xác thực Google thất bại');
+      }
+
+      const userProfile = { email, fullName, googleId };
+      
+      localStorage.setItem('cineglow_token', data.token);
+      localStorage.setItem('cineglow_user', JSON.stringify(userProfile));
+      
+      setToken(data.token);
+      setUser(userProfile);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('cineglow_token');
+    localStorage.removeItem('cineglow_user');
+    setToken(null);
+    setUser(null);
+  };
+
+  // Helper helper to run authorized API fetch requests
+  const fetchWithAuth = async (url, options = {}) => {
+    const activeToken = token || localStorage.getItem('cineglow_token');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    
+    if (activeToken) {
+      headers['Authorization'] = `Bearer ${activeToken}`;
+    }
+
+    return fetch(url, {
+      ...options,
+      headers
+    });
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, token, loading, login, register, loginWithGoogle, logout, fetchWithAuth }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

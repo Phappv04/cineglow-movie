@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Play, Heart, HeartOff, Calendar, Clock, Film, Globe, Tags, Award } from 'lucide-react';
 import { fetchMovieDetails, getImageUrl } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const Details = ({ slug }) => {
+  const { user, fetchWithAuth } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedServerIndex, setSelectedServerIndex] = useState(0);
@@ -18,7 +20,7 @@ const Details = ({ slug }) => {
         if (isMounted) {
           if (details.movie) {
             setData(details);
-            checkWatchlist(details.movie._id);
+            checkWatchlist(details.movie.slug);
           } else {
             setData(null);
           }
@@ -35,47 +37,78 @@ const Details = ({ slug }) => {
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [slug, user]); // Reload when user auth state changes
 
   // Check if movie is already in Watchlist
-  const checkWatchlist = (id) => {
-    try {
-      const watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
-      const found = watchlist.some(m => m._id === id);
-      setIsInWatchlist(found);
-    } catch (e) {
-      console.error(e);
+  const checkWatchlist = async (movieSlug) => {
+    if (user) {
+      try {
+        const res = await fetchWithAuth('http://localhost:8080/api/watch/watchlist');
+        if (res.ok) {
+          const list = await res.json();
+          const found = list.some(item => item.movieSlug === movieSlug);
+          setIsInWatchlist(found);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      try {
+        const watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
+        const found = watchlist.some(m => m.slug === movieSlug);
+        setIsInWatchlist(found);
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
-  // Toggle watchlist state in LocalStorage
-  const handleWatchlistToggle = () => {
+  // Toggle watchlist state
+  const handleWatchlistToggle = async () => {
     if (!data || !data.movie) return;
     const movie = data.movie;
 
-    try {
-      let watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
-      if (isInWatchlist) {
-        watchlist = watchlist.filter(m => m._id !== movie._id);
-        setIsInWatchlist(false);
-      } else {
-        // Save only essential fields to minimize storage size
-        watchlist.push({
-          _id: movie._id,
-          name: movie.name,
-          slug: movie.slug,
-          origin_name: movie.origin_name,
-          poster_url: movie.poster_url,
-          thumb_url: movie.thumb_url,
-          year: movie.year,
-          quality: movie.quality,
-          lang: movie.lang
+    if (user) {
+      try {
+        const res = await fetchWithAuth('http://localhost:8080/api/watch/watchlist/toggle', {
+          method: 'POST',
+          body: JSON.stringify({
+            movieSlug: movie.slug,
+            movieName: movie.name,
+            posterPath: movie.poster_url || movie.thumb_url
+          })
         });
-        setIsInWatchlist(true);
+        if (res.ok) {
+          const result = await res.json();
+          setIsInWatchlist(result.bookmarked);
+        }
+      } catch (e) {
+        console.error('Error toggling watchlist:', e);
       }
-      localStorage.setItem('watchlist', JSON.stringify(watchlist));
-    } catch (e) {
-      console.error('Error modifying watchlist:', e);
+    } else {
+      try {
+        let watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
+        if (isInWatchlist) {
+          watchlist = watchlist.filter(m => m.slug !== movie.slug);
+          setIsInWatchlist(false);
+        } else {
+          watchlist.push({
+            _id: movie._id,
+            name: movie.name,
+            slug: movie.slug,
+            origin_name: movie.origin_name,
+            poster_url: movie.poster_url,
+            thumb_url: movie.thumb_url,
+            year: movie.year,
+            quality: movie.quality,
+            lang: movie.lang
+          });
+          setIsInWatchlist(true);
+        }
+        localStorage.setItem('watchlist', JSON.stringify(watchlist));
+      } catch (e) {
+        console.error('Error modifying watchlist:', e);
+      }
     }
   };
 

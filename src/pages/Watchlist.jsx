@@ -1,38 +1,101 @@
 import React, { useEffect, useState } from 'react';
 import { Heart, Trash2, Play, Calendar, Clock } from 'lucide-react';
 import MovieCard from '../components/MovieCard';
+import { useAuth } from '../context/AuthContext';
 
 const Watchlist = () => {
+  const { user, fetchWithAuth } = useAuth();
   const [watchlist, setWatchlist] = useState([]);
   const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load watchlist
-    const savedWatchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
-    setWatchlist(savedWatchlist);
+    const loadData = async () => {
+      setLoading(true);
+      if (user) {
+        try {
+          // 1. Fetch Watchlist from Backend
+          const watchlistRes = await fetchWithAuth('http://localhost:8080/api/watch/watchlist');
+          if (watchlistRes.ok) {
+            const watchlistData = await watchlistRes.json();
+            // Map backend fields to frontend structures
+            const formattedWatchlist = watchlistData.map(item => ({
+              _id: item.movieSlug,
+              slug: item.movieSlug,
+              name: item.movieName,
+              poster_url: item.posterPath
+            }));
+            setWatchlist(formattedWatchlist);
+          }
 
-    // Load watch history
-    const savedHistory = JSON.parse(localStorage.getItem('watch_history') || '[]');
-    setHistory(savedHistory);
-  }, []);
+          // 2. Fetch Watch History from Backend
+          const historyRes = await fetchWithAuth('http://localhost:8080/api/watch/history');
+          if (historyRes.ok) {
+            const historyData = await historyRes.json();
+            // Map backend history fields to frontend structures
+            const formattedHistory = historyData.map(item => ({
+              _id: item.movieSlug,
+              slug: item.movieSlug,
+              name: item.movieName,
+              poster_url: item.posterPath,
+              lastEpisode: {
+                name: item.lastEpisodeName,
+                slug: item.lastEpisodeSlug
+              },
+              watchedAt: item.updatedAt
+            }));
+            setHistory(formattedHistory);
+          }
+        } catch (error) {
+          console.error('Lỗi khi tải dữ liệu từ server:', error);
+        }
+      } else {
+        // Fallback to local storage if logged out
+        const savedWatchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
+        setWatchlist(savedWatchlist);
+
+        const savedHistory = JSON.parse(localStorage.getItem('watch_history') || '[]');
+        setHistory(savedHistory);
+      }
+      setLoading(false);
+    };
+
+    loadData();
+  }, [user]);
 
   const handleClearWatchlist = () => {
     if (window.confirm('Bạn có chắc chắn muốn xóa toàn bộ danh sách yêu thích?')) {
-      localStorage.removeItem('watchlist');
-      setWatchlist([]);
+      if (!user) {
+        localStorage.removeItem('watchlist');
+        setWatchlist([]);
+      } else {
+        alert('Trong chế độ đăng nhập, hãy bỏ thích từng phim trên trang chi tiết để xóa.');
+      }
     }
   };
 
   const handleClearHistory = () => {
     if (window.confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử xem phim?')) {
-      localStorage.removeItem('watch_history');
-      setHistory([]);
+      if (!user) {
+        localStorage.removeItem('watch_history');
+        setHistory([]);
+      } else {
+        alert('Lịch sử xem trên máy chủ sẽ được cập nhật tự động khi bạn xem các tập phim mới.');
+      }
     }
   };
 
   const handleResumeWatching = (movieSlug, lastEpisode) => {
     window.location.hash = `#/watch/${movieSlug}/${lastEpisode.slug}?server=${lastEpisode.serverIndex || 0}`;
   };
+
+  if (loading) {
+    return (
+      <div className="watchlist-container" style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="watchlist-container">
@@ -43,7 +106,7 @@ const Watchlist = () => {
             <Clock size={28} color="var(--accent-cyan)" />
             <h1 className="search-page-title" style={{ margin: 0 }}>Lịch sử xem</h1>
           </div>
-          {history.length > 0 && (
+          {history.length > 0 && !user && (
             <button className="btn-clear" onClick={handleClearHistory}>
               <Trash2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
               Xóa Lịch Sử
@@ -133,7 +196,7 @@ const Watchlist = () => {
             <Heart size={28} color="var(--accent-purple)" fill="var(--accent-purple)" />
             <h1 className="search-page-title" style={{ margin: 0 }}>Danh sách yêu thích</h1>
           </div>
-          {watchlist.length > 0 && (
+          {watchlist.length > 0 && !user && (
             <button className="btn-clear" onClick={handleClearWatchlist}>
               <Trash2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
               Xóa Tất Cả
