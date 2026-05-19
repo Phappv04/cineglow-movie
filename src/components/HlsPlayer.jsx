@@ -80,6 +80,65 @@ const HlsPlayer = ({ src, movieSlug, episodeSlug }) => {
     };
   }, [src, movieSlug, episodeSlug]);
 
+  // Keyboard control listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      // Disable shortcuts when user is typing in inputs/textareas
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case ' ':
+          e.preventDefault();
+          if (video.paused) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+          break;
+        case 'arrowleft':
+          e.preventDefault();
+          video.currentTime = Math.max(0, video.currentTime - 10);
+          break;
+        case 'arrowright':
+          e.preventDefault();
+          video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
+          break;
+        case 'arrowup':
+          e.preventDefault();
+          video.volume = Math.min(1.0, video.volume + 0.1);
+          break;
+        case 'arrowdown':
+          e.preventDefault();
+          video.volume = Math.max(0.0, video.volume - 0.1);
+          break;
+        case 'f':
+          e.preventDefault();
+          if (!document.fullscreenElement) {
+            video.requestFullscreen?.().catch(() => {});
+          } else {
+            document.exitFullscreen?.().catch(() => {});
+          }
+          break;
+        case 'm':
+          e.preventDefault();
+          video.muted = !video.muted;
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   // Handle saving time update to LocalStorage
   const handleTimeUpdate = () => {
     const video = videoRef.current;

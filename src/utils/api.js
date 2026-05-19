@@ -140,18 +140,46 @@ export const fetchMovieDetails = async (slug) => {
  */
 export const searchMovies = async (keyword, page = 1) => {
   try {
+    let localItems = [];
+    if (page === 1) {
+      try {
+        const localRes = await fetch(`http://localhost:8080/api/public/custom-movies/search?keyword=${encodeURIComponent(keyword)}`);
+        if (localRes.ok) {
+          const localData = await localRes.json();
+          localItems = localData.map(movie => ({
+            _id: "custom-" + movie.id,
+            name: movie.name,
+            slug: movie.slug,
+            origin_name: movie.originName,
+            poster_url: movie.posterUrl,
+            thumb_url: movie.thumbUrl,
+            year: movie.year,
+            quality: movie.quality,
+            lang: movie.lang
+          }));
+        }
+      } catch (localError) {
+        console.log("Local custom movies search offline or failed:", localError.message);
+      }
+    }
+
     const response = await fetchWithFallback(
       `/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&page=${page}`
     );
     const resJson = await response.json();
     const data = resJson.data || {};
+    const mirrorItems = data.items || [];
+    
+    // Combine items: local items first!
+    const combinedItems = [...localItems, ...mirrorItems];
+
     return {
-      items: data.items || [],
+      items: combinedItems,
       pagination: data.params?.pagination || {
         currentPage: page,
         totalPages: 1,
         totalItemsPerPage: 24,
-        totalItems: 0
+        totalItems: combinedItems.length
       }
     };
   } catch (error) {

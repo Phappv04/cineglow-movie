@@ -107,6 +107,44 @@ const Search = ({ query, type }) => {
     }
   };
 
+  const renderPageNumbers = () => {
+    const pages = [];
+    const total = pagination.totalPages;
+    const current = page;
+    
+    // Max 5 buttons
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, start + 4);
+    
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(
+        <button
+          key={i}
+          className={`pagination-number-btn ${i === current ? 'active' : ''}`}
+          onClick={() => handlePageChange(i)}
+          style={{
+            padding: '6px 12px',
+            margin: '0 4px',
+            borderRadius: '6px',
+            border: '1px solid rgba(255,255,255,0.1)',
+            background: i === current ? 'var(--accent-purple)' : 'rgba(255,255,255,0.05)',
+            color: 'white',
+            cursor: 'pointer',
+            fontWeight: i === current ? 'bold' : 'normal',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          {i}
+        </button>
+      );
+    }
+    return pages;
+  };
+
   return (
     <div className="search-container">
       <div className="search-header">
@@ -184,23 +222,25 @@ const Search = ({ query, type }) => {
 
       {/* Pagination component */}
       {!loading && pagination.totalPages > 1 && (
-        <div className="pagination-container">
+        <div className="pagination-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '30px' }}>
           <button 
             className="pagination-btn"
             disabled={page === 1}
             onClick={() => handlePageChange(page - 1)}
+            style={{ opacity: page === 1 ? 0.5 : 1 }}
           >
             <ChevronLeft size={20} />
           </button>
           
-          <div className="pagination-info">
-            Trang <span style={{ color: 'var(--accent-purple)', fontWeight: 'bold' }}>{page}</span> / {pagination.totalPages}
+          <div className="pagination-numbers" style={{ display: 'flex', gap: '4px' }}>
+            {renderPageNumbers()}
           </div>
 
           <button 
             className="pagination-btn"
             disabled={page === pagination.totalPages}
             onClick={() => handlePageChange(page + 1)}
+            style={{ opacity: page === pagination.totalPages ? 0.5 : 1 }}
           >
             <ChevronRight size={20} />
           </button>
