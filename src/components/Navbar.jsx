@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Film, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import AuthModal from './AuthModal';
 
 const Navbar = ({ currentRoute }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, setIsAuthOpen } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   // Handle scroll class toggle
   useEffect(() => {
@@ -157,8 +155,6 @@ const Navbar = ({ currentRoute }) => {
             Đăng Nhập
           </button>
         )}
-
-        <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       </div>
     </nav>
   );

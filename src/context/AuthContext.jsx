@@ -132,8 +132,10 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, loginWithGoogle, logout, fetchWithAuth }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, loginWithGoogle, logout, fetchWithAuth, isAuthOpen, setIsAuthOpen }}>
       {children}
     </AuthContext.Provider>
   );

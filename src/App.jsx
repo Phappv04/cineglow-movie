@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import AuthModal from './components/AuthModal';
+import { useAuth } from './context/AuthContext';
 
 // Pages
 import Home from './pages/Home';
@@ -12,6 +14,7 @@ import AdminPanel from './pages/AdminPanel';
 
 function App() {
   const [route, setRoute] = useState({ page: 'home', params: {} });
+  const { isAuthOpen, setIsAuthOpen } = useAuth();
 
   // Custom Stateful Browser Path Router
   useEffect(() => {
@@ -102,6 +105,7 @@ function App() {
         {renderPage()}
       </main>
       <Footer />
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </div>
   );
 }
