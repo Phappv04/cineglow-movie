@@ -135,7 +135,18 @@ const Navbar = ({ currentRoute }) => {
 
         {user ? (
           <div className="user-profile-menu" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '8px' }}>
-            <span className="user-name-display" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+            <span 
+              className="user-name-display" 
+              onClick={() => navigateTo('profile')}
+              style={{ 
+                fontSize: '0.85rem', 
+                color: 'var(--text-secondary)', 
+                fontWeight: 600, 
+                cursor: 'pointer',
+                transition: 'color 0.2s'
+              }}
+              title="Xem thông tin cá nhân"
+            >
               {user.fullName}
             </span>
             <button 

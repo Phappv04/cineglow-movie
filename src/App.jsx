@@ -11,10 +11,11 @@ import Player from './pages/Player';
 import Search from './pages/Search';
 import Watchlist from './pages/Watchlist';
 import AdminPanel from './pages/AdminPanel';
+import Profile from './pages/Profile';
 
 function App() {
   const [route, setRoute] = useState({ page: 'home', params: {} });
-  const { isAuthOpen, setIsAuthOpen } = useAuth();
+  const { isAuthOpen, setIsAuthOpen, user } = useAuth();
   const [authSuccessMsg, setAuthSuccessMsg] = useState('');
   const [authErrorMsg, setAuthErrorMsg] = useState('');
 
@@ -67,6 +68,9 @@ function App() {
         const type = path.replace('/list/', '').split('?')[0];
         setRoute({ page: 'list', params: { type } });
       } 
+      else if (path === '/profile') {
+        setRoute({ page: 'profile', params: {} });
+      }
       else {
         // Fallback to Home
         setRoute({ page: 'home', params: {} });
@@ -109,6 +113,15 @@ function App() {
         return <Watchlist />;
       case 'admin':
         return <AdminPanel />;
+      case 'profile':
+        if (!user) {
+          setTimeout(() => {
+            setIsAuthOpen(true);
+          }, 0);
+          setRoute({ page: 'home', params: {} });
+          return null;
+        }
+        return <Profile setRoute={setRoute} />;
       default:
         return <Home />;
     }

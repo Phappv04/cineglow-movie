@@ -134,8 +134,16 @@ export const AuthProvider = ({ children }) => {
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
+  const updateUserProfile = (updatedFields) => {
+    if (user) {
+      const newUser = { ...user, ...updatedFields };
+      setUser(newUser);
+      localStorage.setItem('cineglow_user', JSON.stringify(newUser));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, loginWithGoogle, logout, fetchWithAuth, isAuthOpen, setIsAuthOpen }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, loginWithGoogle, logout, fetchWithAuth, isAuthOpen, setIsAuthOpen, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
