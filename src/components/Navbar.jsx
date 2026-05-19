@@ -45,6 +45,8 @@ const Navbar = ({ currentRoute }) => {
       window.history.pushState(null, '', '/watchlist');
     } else if (page === 'admin') {
       window.history.pushState(null, '', '/admin');
+    } else if (page === 'profile') {
+      window.history.pushState(null, '', '/profile');
     }
   };
 
