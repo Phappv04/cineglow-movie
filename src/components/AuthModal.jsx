@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { X, Mail, Lock, User } from 'lucide-react';
 
-const AuthModal = ({ isOpen, onClose }) => {
+const AuthModal = ({ isOpen, onClose, initialSuccess = '', initialError = '' }) => {
   const { login, register, loginWithGoogle } = useAuth();
   const [mode, setMode] = useState('login'); // 'login' or 'register'
   const [email, setEmail] = useState('');
@@ -19,10 +19,10 @@ const AuthModal = ({ isOpen, onClose }) => {
       setEmail('');
       setPassword('');
       setFullName('');
-      setError('');
-      setSuccess('');
+      setError(initialError || '');
+      setSuccess(initialSuccess || '');
     }
-  }, [isOpen, mode]);
+  }, [isOpen, mode, initialSuccess, initialError]);
 
   // Dynamically load Google GSI script and render button
   useEffect(() => {
@@ -125,6 +125,10 @@ const AuthModal = ({ isOpen, onClose }) => {
         setError('Họ và tên phải có ít nhất 2 ký tự.');
         return;
       }
+      if (!nameClean.includes(' ')) {
+        setError('Họ và tên phải bao gồm cả Họ và Tên (ví dụ: Nguyễn Văn A).');
+        return;
+      }
 
       // Password validation
       if (password.length < 8) {
@@ -161,7 +165,7 @@ const AuthModal = ({ isOpen, onClose }) => {
     } else {
       const result = await register(email, password, fullName);
       if (result.success) {
-        setSuccess('Đăng ký tài khoản thành công! Hãy đăng nhập.');
+        setSuccess('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản trước khi đăng nhập.');
         setMode('login');
       } else {
         setError(result.error || 'Email đã được đăng ký.');

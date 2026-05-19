@@ -15,12 +15,28 @@ import AdminPanel from './pages/AdminPanel';
 function App() {
   const [route, setRoute] = useState({ page: 'home', params: {} });
   const { isAuthOpen, setIsAuthOpen } = useAuth();
+  const [authSuccessMsg, setAuthSuccessMsg] = useState('');
+  const [authErrorMsg, setAuthErrorMsg] = useState('');
 
   // Custom Stateful Browser Path Router
   useEffect(() => {
     const handlePathChange = () => {
       const path = window.location.pathname || '/';
       const searchParams = new URLSearchParams(window.location.search);
+      
+      // Check for email verification callback query params
+      const verified = searchParams.get('verified');
+      if (verified === 'true') {
+        window.history.replaceState(null, '', window.location.pathname);
+        setAuthSuccessMsg('Xác thực email thành công! Bạn đã có thể đăng nhập ngay.');
+        setAuthErrorMsg('');
+        setIsAuthOpen(true);
+      } else if (verified === 'false') {
+        window.history.replaceState(null, '', window.location.pathname);
+        setAuthErrorMsg('Liên kết kích hoạt không hợp lệ hoặc đã hết hạn.');
+        setAuthSuccessMsg('');
+        setIsAuthOpen(true);
+      }
       
       // Route rules
       if (path.startsWith('/detail/')) {
@@ -98,6 +114,12 @@ function App() {
     }
   };
 
+  const handleAuthClose = () => {
+    setIsAuthOpen(false);
+    setAuthSuccessMsg('');
+    setAuthErrorMsg('');
+  };
+
   return (
     <div className="app-container">
       <Navbar currentRoute={route} />
@@ -105,7 +127,12 @@ function App() {
         {renderPage()}
       </main>
       <Footer />
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <AuthModal 
+        isOpen={isAuthOpen} 
+        onClose={handleAuthClose} 
+        initialSuccess={authSuccessMsg}
+        initialError={authErrorMsg}
+      />
     </div>
   );
 }
