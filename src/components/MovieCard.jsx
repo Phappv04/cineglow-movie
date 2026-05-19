@@ -14,12 +14,18 @@ const MovieCard = ({ movie }) => {
   const year = movie.year || '';
   const currentEpisode = movie.episode_current || '';
 
+  const decodeHtml = (text) => {
+    if (!text) return '';
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+    return doc.documentElement.textContent || text;
+  };
+
   return (
     <div className="movie-card" onClick={handleClick}>
       <div className="card-img-container">
         <img 
           src={getImageUrl(movie.poster_url || movie.thumb_url)} 
-          alt={movie.name} 
+          alt={decodeHtml(movie.name)} 
           className="card-img"
           loading="lazy"
         />
@@ -37,10 +43,10 @@ const MovieCard = ({ movie }) => {
         </div>
       </div>
       <div className="card-info">
-        <h3 className="card-title" title={movie.name}>{movie.name}</h3>
+        <h3 className="card-title" title={decodeHtml(movie.name)}>{decodeHtml(movie.name)}</h3>
         <div className="card-subinfo">
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-            {movie.origin_name}
+            {decodeHtml(movie.origin_name)}
           </span>
         </div>
       </div>
