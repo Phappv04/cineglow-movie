@@ -1,4 +1,7 @@
-const BASE_URL = 'https://phimapi.com';
+const API_DOMAINS = [
+  'https://phimapi.com',
+  'https://ophim1.com'
+];
 
 /**
  * Normalizes image URLs from the API.
@@ -15,13 +18,32 @@ export const getImageUrl = (url) => {
 };
 
 /**
+ * Helper to fetch from primary and fall back to secondary mirrors on error.
+ */
+const fetchWithFallback = async (subPath, options = {}) => {
+  let lastError = null;
+  for (const domain of API_DOMAINS) {
+    try {
+      const response = await fetch(`${domain}${subPath}`, options);
+      if (response.ok) {
+        return response;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    } catch (error) {
+      console.warn(`API Mirror Failover Warning: Failed to fetch from ${domain}${subPath}:`, error.message);
+      lastError = error;
+    }
+  }
+  throw lastError || new Error('All API mirrors failed to respond');
+};
+
+/**
  * Fetch newly updated movies (phim-moi-cap-nhat).
  * This endpoint has items directly at the root.
  */
 export const fetchRecentMovies = async (page = 1) => {
   try {
-    const response = await fetch(`${BASE_URL}/danh-sach/phim-moi-cap-nhat?page=${page}`);
-    if (!response.ok) throw new Error('Failed to fetch recent movies');
+    const response = await fetchWithFallback(`/danh-sach/phim-moi-cap-nhat?page=${page}`);
     const data = await response.json();
     return {
       items: data.items || [],
@@ -33,7 +55,7 @@ export const fetchRecentMovies = async (page = 1) => {
       }
     };
   } catch (error) {
-    console.error('Error fetching recent movies:', error);
+    console.error('Error fetching recent movies from all mirrors:', error);
     return { items: [], pagination: { currentPage: 1, totalPages: 1 } };
   }
 };
@@ -44,7 +66,7 @@ export const fetchRecentMovies = async (page = 1) => {
  */
 export const fetchMovieList = async (type, page = 1, options = {}) => {
   try {
-    let url = `${BASE_URL}/v1/api/danh-sach/${type}?page=${page}`;
+    let subPath = `/v1/api/danh-sach/${type}?page=${page}`;
     
     // Add additional query filters if provided
     const params = new URLSearchParams();
@@ -55,11 +77,10 @@ export const fetchMovieList = async (type, page = 1, options = {}) => {
     
     const queryString = params.toString();
     if (queryString) {
-      url += `&${queryString}`;
+      subPath += `&${queryString}`;
     }
 
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to fetch movie list for type: ${type}`);
+    const response = await fetchWithFallback(subPath);
     const resJson = await response.json();
     
     // Check nested response structure in V1 API
@@ -75,7 +96,7 @@ export const fetchMovieList = async (type, page = 1, options = {}) => {
       titlePage: resJson.titlePage || data.titlePage || 'Danh sách phim'
     };
   } catch (error) {
-    console.error(`Error fetching movie list for ${type}:`, error);
+    console.error(`Error fetching movie list for ${type} from all mirrors:`, error);
     return { items: [], pagination: { currentPage: page, totalPages: 1 }, titlePage: '' };
   }
 };
@@ -86,15 +107,14 @@ export const fetchMovieList = async (type, page = 1, options = {}) => {
  */
 export const fetchMovieDetails = async (slug) => {
   try {
-    const response = await fetch(`${BASE_URL}/phim/${slug}`);
-    if (!response.ok) throw new Error(`Failed to fetch movie details for: ${slug}`);
+    const response = await fetchWithFallback(`/phim/${slug}`);
     const data = await response.json();
     return {
       movie: data.movie || null,
       episodes: data.episodes || []
     };
   } catch (error) {
-    console.error(`Error fetching movie details for ${slug}:`, error);
+    console.error(`Error fetching movie details for ${slug} from all mirrors:`, error);
     return { movie: null, episodes: [] };
   }
 };
@@ -105,10 +125,9 @@ export const fetchMovieDetails = async (slug) => {
  */
 export const searchMovies = async (keyword, page = 1) => {
   try {
-    const response = await fetch(
-      `${BASE_URL}/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&page=${page}`
+    const response = await fetchWithFallback(
+      `/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&page=${page}`
     );
-    if (!response.ok) throw new Error('Search request failed');
     const resJson = await response.json();
     const data = resJson.data || {};
     return {
@@ -121,7 +140,7 @@ export const searchMovies = async (keyword, page = 1) => {
       }
     };
   } catch (error) {
-    console.error(`Error searching movies for keyword "${keyword}":`, error);
+    console.error(`Error searching movies for keyword "${keyword}" from all mirrors:`, error);
     return { items: [], pagination: { currentPage: page, totalPages: 1 } };
   }
 };

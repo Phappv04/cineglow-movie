@@ -12,37 +12,36 @@ import Watchlist from './pages/Watchlist';
 function App() {
   const [route, setRoute] = useState({ page: 'home', params: {} });
 
-  // Custom Stateful Hash Router
+  // Custom Stateful Browser Path Router
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash || '#/';
+    const handlePathChange = () => {
+      const path = window.location.pathname || '/';
+      const searchParams = new URLSearchParams(window.location.search);
       
       // Route rules
-      if (hash.startsWith('#/detail/')) {
-        const slug = hash.replace('#/detail/', '').split('?')[0]; // strip query params if any
+      if (path.startsWith('/detail/')) {
+        const slug = path.replace('/detail/', '').split('?')[0]; // strip query params if any
         setRoute({ page: 'detail', params: { slug } });
       } 
-      else if (hash.startsWith('#/watch/')) {
-        const pathAndQuery = hash.replace('#/watch/', '');
+      else if (path.startsWith('/watch/')) {
+        const pathAndQuery = path.replace('/watch/', '');
         const parts = pathAndQuery.split('?')[0].split('/');
         const slug = parts[0];
         const episodeSlug = parts[1] || ''; // could be empty to load first episode
         setRoute({ page: 'player', params: { slug, episodeSlug } });
       } 
-      else if (hash === '#/watchlist') {
+      else if (path === '/watchlist') {
         setRoute({ page: 'watchlist', params: {} });
       } 
-      else if (hash.startsWith('#/search')) {
-        const queryPart = hash.split('?')[1] || '';
+      else if (path.startsWith('/search')) {
         const params = {};
-        queryPart.split('&').forEach(pair => {
-          const [k, v] = pair.split('=');
-          if (k) params[k] = decodeURIComponent(v || '');
+        searchParams.forEach((value, key) => {
+          params[key] = value;
         });
         setRoute({ page: 'search', params });
       } 
-      else if (hash.startsWith('#/list/')) {
-        const type = hash.replace('#/list/', '').split('?')[0];
+      else if (path.startsWith('/list/')) {
+        const type = path.replace('/list/', '').split('?')[0];
         setRoute({ page: 'list', params: { type } });
       } 
       else {
@@ -54,10 +53,20 @@ function App() {
       window.scrollTo({ top: 0, behavior: 'instant' });
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Initialize
+    // Override pushState to trigger path change callback
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function (...args) {
+      originalPushState.apply(this, args);
+      handlePathChange();
+    };
 
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePathChange);
+    handlePathChange(); // Initialize
+
+    return () => {
+      window.history.pushState = originalPushState;
+      window.removeEventListener('popstate', handlePathChange);
+    };
   }, []);
 
   // Helper to render the active page

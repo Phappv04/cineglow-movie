@@ -22,7 +22,7 @@ const MovieSlider = ({ title, movies, loading, typeLink }) => {
 
   const handleSeeAll = () => {
     if (typeLink) {
-      window.location.hash = `#/list/${typeLink}`;
+      window.history.pushState(null, '', `/list/${typeLink}`);
     }
   };
 

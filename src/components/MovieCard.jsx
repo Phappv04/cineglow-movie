@@ -5,7 +5,7 @@ const MovieCard = ({ movie }) => {
   if (!movie) return null;
 
   const handleClick = () => {
-    window.location.hash = `#/detail/${movie.slug}`;
+    window.history.pushState(null, '', `/detail/${movie.slug}`);
   };
 
   // Safe checks for badges

@@ -34,17 +34,17 @@ const Navbar = ({ currentRoute }) => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.hash = `#/search?q=${encodeURIComponent(searchQuery.trim())}`;
+      window.history.pushState(null, '', `/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
   const navigateTo = (page, type = '') => {
     if (page === 'home') {
-      window.location.hash = '#/';
+      window.history.pushState(null, '', '/');
     } else if (page === 'list') {
-      window.location.hash = `#/list/${type}`;
+      window.history.pushState(null, '', `/list/${type}`);
     } else if (page === 'watchlist') {
-      window.location.hash = '#/watchlist';
+      window.history.pushState(null, '', '/watchlist');
     }
   };
 

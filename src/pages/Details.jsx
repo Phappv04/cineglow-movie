@@ -117,12 +117,12 @@ const Details = ({ slug }) => {
     const firstServer = data.episodes[selectedServerIndex];
     if (firstServer && firstServer.server_data.length > 0) {
       const firstEpisode = firstServer.server_data[0];
-      window.location.hash = `#/watch/${slug}/${firstEpisode.slug}?server=${selectedServerIndex}`;
+      window.history.pushState(null, '', `/watch/${slug}/${firstEpisode.slug}?server=${selectedServerIndex}`);
     }
   };
 
   const handleEpisodeClick = (episodeSlug) => {
-    window.location.hash = `#/watch/${slug}/${episodeSlug}?server=${selectedServerIndex}`;
+    window.history.pushState(null, '', `/watch/${slug}/${episodeSlug}?server=${selectedServerIndex}`);
   };
 
   if (loading) {

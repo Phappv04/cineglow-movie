@@ -8,12 +8,11 @@ const HeroBanner = ({ movie, loading }) => {
   if (!movie) return null;
 
   const handlePlayClick = () => {
-    // Navigate to play page for this movie
-    window.location.hash = `#/watch/${movie.slug}`;
+    window.history.pushState(null, '', `/watch/${movie.slug}`);
   };
 
   const handleDetailsClick = () => {
-    window.location.hash = `#/detail/${movie.slug}`;
+    window.history.pushState(null, '', `/detail/${movie.slug}`);
   };
 
   const posterImage = getImageUrl(movie.poster_url || movie.thumb_url);

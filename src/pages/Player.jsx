@@ -14,15 +14,10 @@ const Player = ({ slug, episodeSlug }) => {
 
   // Get server index from URL query param
   useEffect(() => {
-    const hash = window.location.hash;
-    const queryPart = hash.split('?')[1] || '';
-    let sIdx = 0;
-    queryPart.split('&').forEach(pair => {
-      const [k, v] = pair.split('=');
-      if (k === 'server') sIdx = parseInt(v) || 0;
-    });
+    const urlParams = new URLSearchParams(window.location.search);
+    const sIdx = parseInt(urlParams.get('server')) || 0;
     setServerIndex(sIdx);
-  }, [slug, episodeSlug, window.location.hash]);
+  }, [slug, episodeSlug, window.location.search]);
 
   // Load details
   useEffect(() => {
@@ -123,11 +118,11 @@ const Player = ({ slug, episodeSlug }) => {
   };
 
   const handleEpisodeChange = (epSlug) => {
-    window.location.hash = `#/watch/${slug}/${epSlug}?server=${serverIndex}`;
+    window.history.pushState(null, '', `/watch/${slug}/${epSlug}?server=${serverIndex}`);
   };
 
   const handleBackToDetails = () => {
-    window.location.hash = `#/detail/${slug}`;
+    window.history.pushState(null, '', `/detail/${slug}`);
   };
 
   const handleNextEpisode = () => {
@@ -177,7 +172,7 @@ const Player = ({ slug, episodeSlug }) => {
     <div className="player-page-container">
       {/* Navigation Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-        <span style={{ cursor: 'pointer', hover: { color: 'white' } }} onClick={() => window.location.hash = '#/'}>Trang chủ</span>
+        <span style={{ cursor: 'pointer', hover: { color: 'white' } }} onClick={() => window.history.pushState(null, '', '/')}>Trang chủ</span>
         <ChevronRight size={14} />
         <span style={{ cursor: 'pointer' }} onClick={handleBackToDetails}>{movie.name}</span>
         <ChevronRight size={14} />
@@ -200,6 +195,7 @@ const Player = ({ slug, episodeSlug }) => {
                 className="iframe-player"
                 allowFullScreen
                 title={activeEpisode.name}
+                sandbox="allow-scripts allow-same-origin allow-forms"
               />
             )}
           </div>
@@ -264,7 +260,7 @@ const Player = ({ slug, episodeSlug }) => {
             <select 
               className="server-select"
               value={serverIndex}
-              onChange={(e) => window.location.hash = `#/watch/${slug}/${activeEpisode.slug}?server=${e.target.value}`}
+              onChange={(e) => window.history.pushState(null, '', `/watch/${slug}/${activeEpisode.slug}?server=${e.target.value}`)}
               style={{ width: '100%' }}
             >
               {episodes.map((server, idx) => (

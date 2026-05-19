@@ -86,7 +86,7 @@ const Watchlist = () => {
   };
 
   const handleResumeWatching = (movieSlug, lastEpisode) => {
-    window.location.hash = `#/watch/${movieSlug}/${lastEpisode.slug}?server=${lastEpisode.serverIndex || 0}`;
+    window.history.pushState(null, '', `/watch/${movieSlug}/${lastEpisode.slug}?server=${lastEpisode.serverIndex || 0}`);
   };
 
   if (loading) {
@@ -152,7 +152,7 @@ const Watchlist = () => {
                       textOverflow: 'ellipsis',
                       cursor: 'pointer'
                     }}
-                    onClick={() => window.location.hash = `#/detail/${item.slug}`}
+                    onClick={() => window.history.pushState(null, '', `/detail/${item.slug}`)}
                   >
                     {item.name}
                   </h3>

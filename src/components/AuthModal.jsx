@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { X, Mail, Lock, User, Chrome } from 'lucide-react';
+import { X, Mail, Lock, User } from 'lucide-react';
 
 const AuthModal = ({ isOpen, onClose }) => {
   const { login, register, loginWithGoogle } = useAuth();
