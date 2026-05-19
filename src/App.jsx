@@ -8,6 +8,7 @@ import Details from './pages/Details';
 import Player from './pages/Player';
 import Search from './pages/Search';
 import Watchlist from './pages/Watchlist';
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   const [route, setRoute] = useState({ page: 'home', params: {} });
@@ -32,6 +33,9 @@ function App() {
       } 
       else if (path === '/watchlist') {
         setRoute({ page: 'watchlist', params: {} });
+      } 
+      else if (path === '/admin') {
+        setRoute({ page: 'admin', params: {} });
       } 
       else if (path.startsWith('/search')) {
         const params = {};
@@ -84,6 +88,8 @@ function App() {
         return <Search type={route.params.type} />;
       case 'watchlist':
         return <Watchlist />;
+      case 'admin':
+        return <AdminPanel />;
       default:
         return <Home />;
     }

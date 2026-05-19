@@ -45,6 +45,8 @@ const Navbar = ({ currentRoute }) => {
       window.history.pushState(null, '', `/list/${type}`);
     } else if (page === 'watchlist') {
       window.history.pushState(null, '', '/watchlist');
+    } else if (page === 'admin') {
+      window.history.pushState(null, '', '/admin');
     }
   };
 
@@ -52,6 +54,7 @@ const Navbar = ({ currentRoute }) => {
     if (page === 'home' && currentRoute.page === 'home') return true;
     if (page === 'list' && currentRoute.page === 'list' && currentRoute.params.type === type) return true;
     if (page === 'watchlist' && currentRoute.page === 'watchlist') return true;
+    if (page === 'admin' && currentRoute.page === 'admin') return true;
     return false;
   };
 
@@ -97,6 +100,15 @@ const Navbar = ({ currentRoute }) => {
         >
           TV Shows
         </button>
+        {user && user.role === 'ADMIN' && (
+          <button 
+            className={`nav-link ${isLinkActive('admin') ? 'active' : ''}`}
+            onClick={() => navigateTo('admin')}
+            style={{ color: 'var(--accent-cyan)' }}
+          >
+            Quản trị
+          </button>
+        )}
       </div>
 
       <div className="navbar-actions">

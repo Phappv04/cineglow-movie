@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import HeroBanner from '../components/HeroBanner';
 import MovieSlider from '../components/MovieSlider';
-import { fetchRecentMovies, fetchMovieList, fetchMovieDetails } from '../utils/api';
+import { fetchRecentMovies, fetchMovieList, fetchMovieDetails, fetchCustomMovies } from '../utils/api';
 
 const Home = () => {
   const [featuredMovie, setFeaturedMovie] = useState(null);
   const [recentMovies, setRecentMovies] = useState([]);
+  const [customMovies, setCustomMovies] = useState([]);
   const [phimLe, setPhimLe] = useState([]);
   const [phimBo, setPhimBo] = useState([]);
   const [hoatHinh, setHoatHinh] = useState([]);
@@ -42,11 +43,12 @@ const Home = () => {
         }
 
         // Parallel load of lists
-        const [leData, boData, animeData, tvData] = await Promise.all([
+        const [leData, boData, animeData, tvData, customData] = await Promise.all([
           fetchMovieList('phim-le', 1, { limit: 12 }),
           fetchMovieList('phim-bo', 1, { limit: 12 }),
           fetchMovieList('hoat-hinh', 1, { limit: 12 }),
-          fetchMovieList('tv-shows', 1, { limit: 12 })
+          fetchMovieList('tv-shows', 1, { limit: 12 }),
+          fetchCustomMovies()
         ]);
 
         if (!isMounted) return;
@@ -55,6 +57,7 @@ const Home = () => {
         setPhimBo(boData.items || []);
         setHoatHinh(animeData.items || []);
         setTvShows(tvData.items || []);
+        setCustomMovies(customData || []);
         setLoadingLists(false);
 
       } catch (error) {
@@ -78,6 +81,14 @@ const Home = () => {
       <HeroBanner movie={featuredMovie} loading={loadingHero} />
       
       <div style={{ marginTop: '-40px', position: 'relative', zIndex: 5 }}>
+        {customMovies.length > 0 && (
+          <MovieSlider 
+            title="Phim Tự Tải Lên" 
+            movies={customMovies} 
+            loading={loadingLists} 
+          />
+        )}
+        
         <MovieSlider 
           title="Mới Cập Nhật" 
           movies={recentMovies} 

@@ -107,6 +107,21 @@ export const fetchMovieList = async (type, page = 1, options = {}) => {
  */
 export const fetchMovieDetails = async (slug) => {
   try {
+    // 1. Try local custom movies endpoint first
+    try {
+      const localRes = await fetch(`http://localhost:8080/api/public/custom-movies/${slug}`);
+      if (localRes.ok) {
+        const localData = await localRes.json();
+        return {
+          movie: localData.movie || null,
+          episodes: localData.episodes || []
+        };
+      }
+    } catch (localError) {
+      console.log('Local custom movie API is offline or slug not found, falling back to mirrors...');
+    }
+
+    // 2. Fallback to mirror API
     const response = await fetchWithFallback(`/phim/${slug}`);
     const data = await response.json();
     return {
@@ -143,4 +158,19 @@ export const searchMovies = async (keyword, page = 1) => {
     console.error(`Error searching movies for keyword "${keyword}" from all mirrors:`, error);
     return { items: [], pagination: { currentPage: page, totalPages: 1 } };
   }
+};
+
+/**
+ * Fetch all local custom movies uploaded by administrator.
+ */
+export const fetchCustomMovies = async () => {
+  try {
+    const res = await fetch('http://localhost:8080/api/public/custom-movies');
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (error) {
+    console.log("Local custom movies API is offline:", error.message);
+  }
+  return [];
 };

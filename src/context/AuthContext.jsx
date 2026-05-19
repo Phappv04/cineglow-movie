@@ -19,6 +19,19 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  const parseJwt = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  };
+
   const login = async (email, password) => {
     try {
       const response = await fetch('http://localhost:8080/api/auth/login', {
@@ -33,7 +46,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Save token and parse a basic profile from email
-      const userProfile = { email, fullName: email.split('@')[0] }; // Basic fallback name
+      const tokenPayload = parseJwt(data.token);
+      const role = tokenPayload?.role || 'USER';
+      const userProfile = { email, fullName: email.split('@')[0], role };
       
       localStorage.setItem('cineglow_token', data.token);
       localStorage.setItem('cineglow_user', JSON.stringify(userProfile));
@@ -77,7 +92,9 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.error || 'Xác thực Google thất bại');
       }
 
-      const userProfile = { email, fullName, googleId };
+      const tokenPayload = parseJwt(data.token);
+      const role = tokenPayload?.role || 'USER';
+      const userProfile = { email, fullName, googleId, role };
       
       localStorage.setItem('cineglow_token', data.token);
       localStorage.setItem('cineglow_user', JSON.stringify(userProfile));
