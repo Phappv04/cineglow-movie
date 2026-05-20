@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../config';
+
 const API_DOMAINS = [
   'https://phimapi.com',
   'https://ophim1.com'
@@ -109,7 +111,7 @@ export const fetchMovieDetails = async (slug) => {
   try {
     // 1. Try local custom movies endpoint first
     try {
-      const localRes = await fetch(`http://localhost:8080/api/public/custom-movies/${slug}`);
+      const localRes = await fetch(`${API_BASE_URL}/api/public/custom-movies/${slug}`);
       if (localRes.ok) {
         const localData = await localRes.json();
         return {
@@ -143,7 +145,7 @@ export const searchMovies = async (keyword, page = 1) => {
     let localItems = [];
     if (page === 1) {
       try {
-        const localRes = await fetch(`http://localhost:8080/api/public/custom-movies/search?keyword=${encodeURIComponent(keyword)}`);
+        const localRes = await fetch(`${API_BASE_URL}/api/public/custom-movies/search?keyword=${encodeURIComponent(keyword)}`);
         if (localRes.ok) {
           const localData = await localRes.json();
           localItems = localData.map(movie => ({
@@ -193,7 +195,7 @@ export const searchMovies = async (keyword, page = 1) => {
  */
 export const fetchCustomMovies = async () => {
   try {
-    const res = await fetch('http://localhost:8080/api/public/custom-movies');
+    const res = await fetch(`${API_BASE_URL}/api/public/custom-movies`);
     if (res.ok) {
       return await res.json();
     }

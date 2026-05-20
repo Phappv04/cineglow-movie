@@ -45,7 +45,7 @@ const AdminPanel = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetchWithAuth('http://localhost:8080/api/admin/movies');
+      const res = await fetchWithAuth('/api/admin/movies');
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || 'Không thể tải danh sách phim từ server.');
@@ -99,11 +99,11 @@ const AdminPanel = () => {
     };
 
     try {
-      let url = 'http://localhost:8080/api/admin/movies';
+      let url = '/api/admin/movies';
       let method = 'POST';
 
       if (editingId) {
-        url = `http://localhost:8080/api/admin/movies/${editingId}`;
+        url = `/api/admin/movies/${editingId}`;
         method = 'PUT';
       }
 
@@ -145,7 +145,7 @@ const AdminPanel = () => {
       setError('');
       setSuccess('');
       try {
-        const res = await fetchWithAuth(`http://localhost:8080/api/admin/movies/${id}`, {
+        const res = await fetchWithAuth(`/api/admin/movies/${id}`, {
           method: 'DELETE'
         });
         if (!res.ok) {

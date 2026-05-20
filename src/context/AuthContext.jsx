@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { API_BASE_URL } from '../config';
 
 const AuthContext = createContext(null);
 
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -63,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (email, password, fullName) => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, fullName })
@@ -81,7 +82,7 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithGoogle = async (email, fullName, googleId) => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/google', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, fullName, googleId })
@@ -126,7 +127,9 @@ export const AuthProvider = ({ children }) => {
       headers['Authorization'] = `Bearer ${activeToken}`;
     }
 
-    return fetch(url, {
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+
+    return fetch(fullUrl, {
       ...options,
       headers
     });

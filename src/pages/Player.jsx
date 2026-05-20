@@ -68,7 +68,7 @@ const Player = ({ slug, episodeSlug }) => {
     
     if (user) {
       try {
-        await fetchWithAuth('http://localhost:8080/api/watch/history', {
+        await fetchWithAuth('/api/watch/history', {
           method: 'POST',
           body: JSON.stringify({
             movieSlug: movie.slug,

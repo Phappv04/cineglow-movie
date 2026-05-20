@@ -24,7 +24,7 @@ const Profile = ({ setRoute }) => {
       setLoading(true);
       setError('');
       try {
-        const response = await fetchWithAuth('http://localhost:8080/api/auth/profile');
+        const response = await fetchWithAuth('/api/auth/profile');
         if (response.ok) {
           const data = await response.json();
           setProfileDetails(data);
@@ -109,7 +109,7 @@ const Profile = ({ setRoute }) => {
         body.newPassword = newPassword;
       }
 
-      const response = await fetchWithAuth('http://localhost:8080/api/auth/profile', {
+      const response = await fetchWithAuth('/api/auth/profile', {
         method: 'PUT',
         body: JSON.stringify(body)
       });

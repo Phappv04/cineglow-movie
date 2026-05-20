@@ -43,7 +43,7 @@ const Details = ({ slug }) => {
   const checkWatchlist = async (movieSlug) => {
     if (user) {
       try {
-        const res = await fetchWithAuth('http://localhost:8080/api/watch/watchlist');
+        const res = await fetchWithAuth('/api/watch/watchlist');
         if (res.ok) {
           const list = await res.json();
           const found = list.some(item => item.movieSlug === movieSlug);
@@ -70,7 +70,7 @@ const Details = ({ slug }) => {
 
     if (user) {
       try {
-        const res = await fetchWithAuth('http://localhost:8080/api/watch/watchlist/toggle', {
+        const res = await fetchWithAuth('/api/watch/watchlist/toggle', {
           method: 'POST',
           body: JSON.stringify({
             movieSlug: movie.slug,

@@ -15,7 +15,7 @@ const Watchlist = () => {
       if (user) {
         try {
           // 1. Fetch Watchlist from Backend
-          const watchlistRes = await fetchWithAuth('http://localhost:8080/api/watch/watchlist');
+          const watchlistRes = await fetchWithAuth('/api/watch/watchlist');
           if (watchlistRes.ok) {
             const watchlistData = await watchlistRes.json();
             // Map backend fields to frontend structures
@@ -29,7 +29,7 @@ const Watchlist = () => {
           }
 
           // 2. Fetch Watch History from Backend
-          const historyRes = await fetchWithAuth('http://localhost:8080/api/watch/history');
+          const historyRes = await fetchWithAuth('/api/watch/history');
           if (historyRes.ok) {
             const historyData = await historyRes.json();
             // Map backend history fields to frontend structures
