@@ -46,10 +46,12 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.error || 'Đăng nhập thất bại');
       }
 
-      // Save token and parse a basic profile from email
-      const tokenPayload = parseJwt(data.token);
-      const role = tokenPayload?.role || 'USER';
-      const userProfile = { email, fullName: email.split('@')[0], role };
+      // Save token and use profile from backend if returned, fallback to parsing token/email
+      const userProfile = data.user || {
+        email,
+        fullName: email.split('@')[0],
+        role: parseJwt(data.token)?.role || 'USER'
+      };
       
       localStorage.setItem('cineglow_token', data.token);
       localStorage.setItem('cineglow_user', JSON.stringify(userProfile));
@@ -93,9 +95,12 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.error || 'Xác thực Google thất bại');
       }
 
-      const tokenPayload = parseJwt(data.token);
-      const role = tokenPayload?.role || 'USER';
-      const userProfile = { email, fullName, googleId, role };
+      const userProfile = data.user || {
+        email,
+        fullName,
+        googleId,
+        role: parseJwt(data.token)?.role || 'USER'
+      };
       
       localStorage.setItem('cineglow_token', data.token);
       localStorage.setItem('cineglow_user', JSON.stringify(userProfile));

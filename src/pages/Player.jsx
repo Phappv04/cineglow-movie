@@ -11,6 +11,7 @@ const Player = ({ slug, episodeSlug }) => {
   const [serverIndex, setServerIndex] = useState(0);
   const [activeEpisode, setActiveEpisode] = useState(null);
   const [playerType, setPlayerType] = useState('direct'); // 'direct' (Hls) or 'embed' (Iframe)
+  const [initialTime, setInitialTime] = useState(0);
 
   // Get server index from URL query param
   useEffect(() => {
@@ -62,8 +63,30 @@ const Player = ({ slug, episodeSlug }) => {
     // Save to Watch History
     saveToHistory(data.movie, targetEp, serverIndex);
   }, [data, serverIndex, episodeSlug, user]); // Reload when user log in state changes
+  
+  // Fetch watch history from backend to get saved progress
+  useEffect(() => {
+    if (!user || !activeEpisode) return;
+    
+    const loadHistoryProgress = async () => {
+      try {
+        const res = await fetchWithAuth('/api/watch/history');
+        if (res.ok) {
+          const history = await res.json();
+          const currentMovieHistory = history.find(item => item.movieSlug === slug);
+          if (currentMovieHistory && currentMovieHistory.lastEpisodeSlug === activeEpisode.slug) {
+            setInitialTime(currentMovieHistory.progressSeconds || 0);
+          }
+        }
+      } catch (err) {
+        console.warn('Error loading history progress:', err);
+      }
+    };
 
-  const saveToHistory = async (movie, episode, sIndex) => {
+    loadHistoryProgress();
+  }, [slug, activeEpisode, user]);
+
+  const saveToHistory = async (movie, episode, sIndex, progressSeconds = null) => {
     if (!movie || !episode) return;
     
     if (user) {
@@ -76,7 +99,7 @@ const Player = ({ slug, episodeSlug }) => {
             posterPath: movie.poster_url || movie.thumb_url,
             lastEpisodeName: episode.name,
             lastEpisodeSlug: episode.slug,
-            progressSeconds: 0.0
+            progressSeconds: progressSeconds
           })
         });
       } catch (e) {
@@ -168,6 +191,25 @@ const Player = ({ slug, episodeSlug }) => {
   const { movie, episodes } = data;
   const currentServer = episodes[serverIndex] || episodes[0];
 
+  const handleProgressUpdate = async (seconds) => {
+    if (!user || !data || !data.movie || !activeEpisode) return;
+    try {
+      await fetchWithAuth('/api/watch/history', {
+        method: 'POST',
+        body: JSON.stringify({
+          movieSlug: data.movie.slug,
+          movieName: data.movie.name,
+          posterPath: data.movie.poster_url || data.movie.thumb_url,
+          lastEpisodeName: activeEpisode.name,
+          lastEpisodeSlug: activeEpisode.slug,
+          progressSeconds: seconds
+        })
+      });
+    } catch (e) {
+      console.error('Error updating progress on server:', e);
+    }
+  };
+
   return (
     <div className="player-page-container">
       {/* Navigation Breadcrumb */}
@@ -188,6 +230,8 @@ const Player = ({ slug, episodeSlug }) => {
                 src={activeEpisode.link_m3u8} 
                 movieSlug={slug}
                 episodeSlug={activeEpisode.slug}
+                initialTime={initialTime}
+                onProgressUpdate={handleProgressUpdate}
               />
             ) : (
               <iframe 

@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import { Play, RotateCcw } from 'lucide-react';
 
-const HlsPlayer = ({ src, movieSlug, episodeSlug }) => {
+const HlsPlayer = ({ src, movieSlug, episodeSlug, initialTime = 0, onProgressUpdate }) => {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const lastSavedTimeRef = useRef(0);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [savedTime, setSavedTime] = useState(0);
 
@@ -26,13 +27,15 @@ const HlsPlayer = ({ src, movieSlug, episodeSlug }) => {
       hlsRef.current = null;
     }
 
-    // Check if there is saved progress
-    const saved = localStorage.getItem(storageKey);
+    // Check if there is saved progress (local storage first, fallback to initialTime)
+    const localSaved = localStorage.getItem(storageKey);
+    const saved = localSaved ? parseFloat(localSaved) : initialTime;
     if (saved) {
       const parsedTime = parseFloat(saved);
       if (parsedTime > 10) { // Only resume if played more than 10 seconds
         setSavedTime(parsedTime);
         setShowResumePrompt(true);
+        lastSavedTimeRef.current = parsedTime;
       }
     }
 
@@ -139,7 +142,7 @@ const HlsPlayer = ({ src, movieSlug, episodeSlug }) => {
     };
   }, []);
 
-  // Handle saving time update to LocalStorage
+  // Handle saving time update to LocalStorage and server
   const handleTimeUpdate = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -152,8 +155,20 @@ const HlsPlayer = ({ src, movieSlug, episodeSlug }) => {
       // Don't save progress if near the end (95% done)
       if (currentTime / duration < 0.95) {
         localStorage.setItem(storageKey, currentTime.toString());
+        if (Math.abs(currentTime - lastSavedTimeRef.current) >= 5) {
+          lastSavedTimeRef.current = currentTime;
+          if (onProgressUpdate) {
+            onProgressUpdate(currentTime);
+          }
+        }
       } else {
         localStorage.removeItem(storageKey);
+        if (lastSavedTimeRef.current !== 0) {
+          lastSavedTimeRef.current = 0;
+          if (onProgressUpdate) {
+            onProgressUpdate(0.0);
+          }
+        }
       }
     }
   };
